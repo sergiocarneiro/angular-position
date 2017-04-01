@@ -1,97 +1,72 @@
-import { NgModule } from '@angular/core';
+import { NgModule, Directive, ElementRef, Input, AfterViewChecked, OnChanges, SimpleChanges } from "@angular/core";
 
-//
-// Absolute Positioning
-//
-import { AboveOfDirective } from "./directives/alignment/above-of";
-import { BelowOfDirective } from "./directives/alignment/below-of";
-import { ToLeftOfDirective } from "./directives/alignment/to-left-of";
-import { ToRightOfDirective } from "./directives/alignment/to-right-of";
-import { ToCenterOfDirective } from "./directives/alignment/to-center-of";
-import { ToCenterXOfDirective } from "./directives/alignment/to-center-x-of";
-import { ToCenterYOfDirective } from "./directives/alignment/to-center-y-of";
-export { AboveOfDirective };
-export { BelowOfDirective };
-export { ToLeftOfDirective };
-export { ToRightOfDirective };
-export { ToCenterOfDirective };
-export { ToCenterXOfDirective };
-export { ToCenterYOfDirective };
-
-//
-// CSS properties shortcuts
-//
-import { AbsolutePositionDirective } from "./directives/properties/absolute";
-import { FixedPositionDirective } from "./directives/properties/fixed";
-import { RelativePositionDirective } from "./directives/properties/relative";
-import { StaticPositionDirective } from "./directives/properties/static";
-export { AbsolutePositionDirective };
-export { FixedPositionDirective };
-export { RelativePositionDirective };
-export { StaticPositionDirective };
-
-import { LeftPositionDirective } from "./directives/properties/left";
-import { RightPositionDirective } from "./directives/properties/right";
-import { TopPositionDirective } from "./directives/properties/top";
-import { BottomPositionDirective } from "./directives/properties/bottom";
-export { LeftPositionDirective };
-export { RightPositionDirective };
-export { TopPositionDirective };
-export { BottomPositionDirective };
-
-import { ZIndexDirective, ZDirective } from "./directives/properties/z-index";
-export { ZIndexDirective };
-export { ZDirective };
-
-@NgModule(
-{
-    declarations:
-    [
-        AboveOfDirective,
-        BelowOfDirective,
-        ToLeftOfDirective,
-        ToRightOfDirective,
-        ToCenterOfDirective,
-        ToCenterXOfDirective,
-        ToCenterYOfDirective,
-
-        AbsolutePositionDirective,
-        FixedPositionDirective,
-        RelativePositionDirective,
-        StaticPositionDirective,
-
-        LeftPositionDirective,
-        RightPositionDirective,
-        TopPositionDirective,
-        BottomPositionDirective,
-
-        ZIndexDirective,
-        ZDirective
-    ],
-    
-    exports:
-    [
-        AboveOfDirective,
-        BelowOfDirective,
-        ToLeftOfDirective,
-        ToRightOfDirective,
-        ToCenterOfDirective,
-        ToCenterXOfDirective,
-        ToCenterYOfDirective,
-
-        AbsolutePositionDirective,
-        FixedPositionDirective,
-        RelativePositionDirective,
-        StaticPositionDirective,
-
-        LeftPositionDirective,
-        RightPositionDirective,
-        TopPositionDirective,
-        BottomPositionDirective,
-
-        ZIndexDirective,
-        ZDirective
-    ]
+@Directive({
+    selector: "[preventScroll]",
+    host: {
+        "(mouseenter)": "onMouseEnter()",
+        "(mouseleave)": "onMouseLeave()",
+    }
 })
+/**
+ * Prevents an element from scrolling whenever the user is making actions
+ * within the element where this directive was applied.
+ */
+export class PreventScrollDirective implements AfterViewChecked, OnChanges {
+    /**
+     * The id of the element to prevent scroll when this element is focused.
+     * 
+     * Can be empty, and if so, the target will be the element itself.
+     * 
+     * **Special ID's:** `body`
+     */
+    @Input() preventScroll: string;
+    private target: HTMLElement;
 
-export class AlignmentModule {}
+    private element: HTMLElement;
+
+    constructor(element: ElementRef) {
+        this.element = element.nativeElement;
+    }
+
+    ngAfterViewChecked() {
+        if (!this.target) {
+            this.updateTarget();
+        }
+    }
+
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes["preventScroll"]) {
+            this.updateTarget();
+        }
+    }
+
+    private onMouseEnter() {
+        console.dir(this.target);
+        this.target.style.overflow = "hidden";
+    }
+
+    private onMouseLeave() {
+        this.target.style.overflow = "auto";
+    }
+
+    private updateTarget() {
+        // Self
+        if (!this.preventScroll) {
+            this.target = this.element;
+        }
+        // Body
+        else if (this.preventScroll == "body") {
+            this.target = document.body;
+        }
+        // Specific ID
+        else {
+            this.target = document.getElementById(this.preventScroll);
+        }
+    }
+}
+
+@NgModule({
+    declarations: [PreventScrollDirective],
+    exports: [PreventScrollDirective]
+})
+export class PreventScrollModule {}
